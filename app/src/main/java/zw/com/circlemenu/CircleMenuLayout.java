@@ -1,8 +1,16 @@
 package zw.com.circlemenu;
 
 import android.content.Context;
+import android.media.tv.TvContentRating;
+import android.text.Layout;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 /**
  * Created by Admin on 2016/9/6.
@@ -64,6 +72,66 @@ public class CircleMenuLayout extends ViewGroup {
     }
 
 
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+
+
+        int resWidth = 0;
+        int resHeight = 0;
+
+
+        int width = MeasureSpec.getSize(widthMeasureSpec);
+        int widthMode = MeasureSpec.getMode(widthMeasureSpec);
+        int height = MeasureSpec.getSize(heightMeasureSpec);
+        int heightMode = MeasureSpec.getMode(heightMeasureSpec);
+
+
+        if (widthMode != MeasureSpec.EXACTLY || heightMode != MeasureSpec.EXACTLY) {
+            resWidth = getSuggestedMinimumWidth();
+
+            resWidth = resWidth == 0 ? getDefaultWidth() : resWidth;
+
+            resHeight = getSuggestedMinimumHeight();
+
+            resHeight = resHeight == 0 ? getDefaultWidth() : resHeight;
+        } else {
+            resWidth = resHeight = Math.min(width, height);
+        }
+        setMeasuredDimension(resWidth, resHeight);
+
+        mRadius = Math.min(getMeasuredWidth(), getMeasuredHeight());
+
+        final int count = getChildCount();
+
+        int childSize = (int) (mRadius * RADIO_DEFAULT_CHILD_DIMENSION);
+        int childMode = MeasureSpec.EXACTLY;
+        for (int i = 0; i < count; i++) {
+            final View child = getChildAt(i);
+            if (child.getVisibility() == GONE) {
+                continue;
+            }
+
+            int makeMeasureSpec = -1;
+            if (child.getId() == R.id.id_circle_menu_item_center) {
+                makeMeasureSpec = MeasureSpec.makeMeasureSpec((int) (mRadius * RADIO_DEFAULT_CANTERITEM_DIMENSION),
+                        childMode);
+                child.measure(makeMeasureSpec, makeMeasureSpec);
+            }
+        }
+
+        mPadding = RADIO_PADDING_LAYOUT * mRadius;
+    }
+
+
+    private int getDefaultWidth() {
+        WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
+
+        DisplayMetrics outMetrics = new DisplayMetrics();
+
+        wm.getDefaultDisplay().getMetrics(outMetrics);
+        return Math.min(outMetrics.widthPixels, outMetrics.heightPixels);
+    }
+
     public void setMenuItemIconsAndTexts(int[] resIds, String[] texts) {
         mItemImgs = resIds;
         mItemTexts = texts;
@@ -79,6 +147,48 @@ public class CircleMenuLayout extends ViewGroup {
     }
 
     private void addMenuItems() {
+        LayoutInflater inflater = LayoutInflater.from(getContext());
 
+        for (int i = 0; i < mMenuItemCount; i++) {
+            final int j = i;
+
+            View view = inflater.inflate(R.layout.item_cirle_menu, this, false);
+            ImageView iv = (ImageView) view.findViewById(R.id.iv_menu);
+            TextView contentTv = (TextView) view.findViewById(R.id.tv_menu);
+
+            if (iv != null) {
+                iv.setVisibility(VISIBLE);
+                iv.setImageResource(mItemImgs[i]);
+                iv.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (mOnMenuItemClickListener != null) {
+                            mOnMenuItemClickListener.itemClick(v, j);
+                        }
+                    }
+                });
+            }
+
+            if (contentTv != null) {
+                contentTv.setVisibility(VISIBLE);
+                contentTv.setText(mItemTexts[i]);
+            }
+
+            addView(view);
+        }
     }
+
+
+    public interface OnMenuItemClickListener {
+        void itemClick(View view, int pos);
+
+        void itemCenterClick(View view);
+    }
+
+    private OnMenuItemClickListener mOnMenuItemClickListener;
+
+    public void setOnMenuItemClickListener(OnMenuItemClickListener listener) {
+        this.mOnMenuItemClickListener = listener;
+    }
+
 }
