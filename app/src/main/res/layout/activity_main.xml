@@ -3,28 +3,32 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:gravity="center_vertical"
+              android:background="@color/colorPrimary"
               android:orientation="horizontal">
 
     <zw.com.circlemenu.CircleMenuLayout
         android:id="@+id/menu_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@drawable/circle_bg3"
         android:padding="100dp">
 
         <RelativeLayout
-            android:id="@+id/id_circle_menu_item_center"
+            android:id="@id/id_circle_menu_item_center"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
+
             <ImageView
-                android:layout_width="104dp"
-                android:layout_height="104dp"
+                android:layout_width="104.0dip"
+                android:layout_height="104.0dip"
                 android:layout_centerInParent="true"
-                />
+                android:background="@drawable/turnplate_center_unlogin"/>
+
             <ImageView
-                android:layout_width="116dp"
-                android:layout_height="116dp"
+                android:layout_width="116.0dip"
+                android:layout_height="116.0dip"
                 android:layout_centerInParent="true"
-                />
+                android:background="@drawable/turnplate_mask_unlogin_normal"/>
         </RelativeLayout>
     </zw.com.circlemenu.CircleMenuLayout>
 

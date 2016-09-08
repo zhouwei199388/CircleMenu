@@ -5,7 +5,9 @@ import android.media.tv.TvContentRating;
 import android.text.Layout;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -49,26 +51,66 @@ public class CircleMenuLayout extends ViewGroup {
     //检测按下到抬起的旋转角度
     private float mTmpAngle;
 
+    //检测按下到抬起时使用时间
+    private long mDownTimes;
+
     //判断是否正在滚动
     private boolean isFling;
 
-
-//    public CircleMenuLayout(Context context) {
-//        super(context);
-//    }
 
     public CircleMenuLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
         setPadding(0, 0, 0, 0);
     }
 
-//    public CircleMenuLayout(Context context, AttributeSet attrs, int defStyleAttr) {
-//        super(context, attrs, defStyleAttr);
-//    }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
 
+        int layoutRadius = mRadius;
+        final int childCount = getChildCount();
+        int left, top;
+
+        int cWidth = (int) (layoutRadius * RADIO_DEFAULT_CHILD_DIMENSION);
+
+        float angleDelay = 360 / (getChildCount() - 1);
+
+        for (int i = 0; i < childCount; i++) {
+            final View child = getChildAt(i);
+            if (child.getId() == R.id.id_circle_menu_item_center) {
+                continue;
+            }
+            if (child.getVisibility() == GONE) {
+                continue;
+            }
+
+            mStartAngle %= 360;
+            float tmp = layoutRadius / 2f - cWidth / 2 - mPadding;
+
+
+            left = layoutRadius / 2 + (int) Math.round(tmp * Math.cos(Math.toRadians(mStartAngle)
+            ) - 1 / 2f * cWidth);
+
+            top = layoutRadius / 2 + (int) Math.round(tmp * Math.sin(Math.toRadians(mStartAngle))
+                    - 1 / 2f * cWidth);
+
+            child.layout(left, top, left + cWidth, top + cWidth);
+            mStartAngle += angleDelay;
+        }
+        View cView = findViewById(R.id.id_circle_menu_item_center);
+        if (cView != null) {
+            cView.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mOnMenuItemClickListener != null) {
+                        mOnMenuItemClickListener.itemCenterClick(v);
+                    }
+                }
+            });
+            int cl = layoutRadius / 2 - cView.getMeasuredWidth() / 2;
+            int cr = cl + cView.getMeasuredWidth();
+            cView.layout(cl, cl, cr, cr);
+        }
     }
 
 
@@ -113,15 +155,64 @@ public class CircleMenuLayout extends ViewGroup {
 
             int makeMeasureSpec = -1;
             if (child.getId() == R.id.id_circle_menu_item_center) {
-                makeMeasureSpec = MeasureSpec.makeMeasureSpec((int) (mRadius * RADIO_DEFAULT_CANTERITEM_DIMENSION),
+                makeMeasureSpec = MeasureSpec.makeMeasureSpec((int) (mRadius *
+                                RADIO_DEFAULT_CANTERITEM_DIMENSION),
                         childMode);
-                child.measure(makeMeasureSpec, makeMeasureSpec);
+            } else {
+                makeMeasureSpec = MeasureSpec.makeMeasureSpec(childSize, childMode);
             }
+            child.measure(makeMeasureSpec, makeMeasureSpec);
         }
-
         mPadding = RADIO_PADDING_LAYOUT * mRadius;
     }
 
+
+    private float mLastX;
+    private float mLastY;
+    private AutoFlingRunnable mFlingRunable;
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+
+        float x = ev.getX();
+        float y = ev.getY();
+
+        Log.e("TAG", "X:  " + x + "Y:  " + y);
+        switch (ev.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                mLastX = x;
+                mLastY = y;
+                mDownTimes = System.currentTimeMillis();
+                if (isFling) {
+                    removeCallbacks(mFlingRunable);
+                    isFling = false;
+                    return true;
+                }
+                break;
+            case MotionEvent.ACTION_MOVE:
+                float start = getAngle(mLastX, mLastY);
+                float end = getAngle(x, y);
+                if (getQuadrant(x, y) == 1 || getQuadrant(x, y) == 4) {
+                    mStartAngle += end - start;
+                    mTmpAngle += end - start;
+                }
+                requestLayout();
+                mLastX = x;
+                mLastY = y;
+                break;
+            case MotionEvent.ACTION_UP:
+                float anglePerSecond = mTmpAngle * 1000 / (System.currentTimeMillis() - mDownTimes);
+                if (Math.abs(anglePerSecond) > mFlingableValue && !isFling) {
+                    post(mFlingRunable = new AutoFlingRunnable(anglePerSecond));
+                    return true;
+                }
+                if (Math.abs(mTmpAngle) > NOCLICK_VALUE) {
+                    return true;
+                }
+                break;
+        }
+        return super.dispatchTouchEvent(ev);
+    }
 
     private int getDefaultWidth() {
         WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
@@ -144,6 +235,7 @@ public class CircleMenuLayout extends ViewGroup {
         if (resIds != null && texts != null) {
             mMenuItemCount = Math.min(resIds.length, texts.length);
         }
+        addMenuItems();
     }
 
     private void addMenuItems() {
@@ -175,6 +267,43 @@ public class CircleMenuLayout extends ViewGroup {
             }
 
             addView(view);
+        }
+    }
+
+    private float getAngle(float xTouch, float yTouch) {
+        double x = xTouch - (mRadius / 2d);
+        double y = yTouch - (mRadius / 2d);
+        return (float) (Math.asin(y / Math.hypot(x, y)) * 180 / Math.PI);
+    }
+
+    private float getQuadrant(float x, float y) {
+        int tmpX = (int) (x - mRadius / 2);
+        int tmpY = (int) (y - mRadius / 2);
+        if (tmpX >= 0) {
+            return tmpY > 0 ? 4 : 1;
+        } else {
+            return tmpY > 0 ? 3 : 2;
+        }
+    }
+
+    private class AutoFlingRunnable implements Runnable {
+        private float angelPerSecond;
+
+        public AutoFlingRunnable(float velocity) {
+            this.angelPerSecond = velocity;
+        }
+
+        @Override
+        public void run() {
+            if ((int) Math.abs(angelPerSecond) < 20) {
+                isFling = false;
+                return;
+            }
+            isFling = true;
+            mStartAngle += (angelPerSecond / 30);
+            angelPerSecond /= 1.0666F;
+            postDelayed(this, 30);
+            requestLayout();
         }
     }
 
