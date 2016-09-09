@@ -195,6 +195,9 @@ public class CircleMenuLayout extends ViewGroup {
                 if (getQuadrant(x, y) == 1 || getQuadrant(x, y) == 4) {
                     mStartAngle += end - start;
                     mTmpAngle += end - start;
+                } else {
+                    mStartAngle += start - end;
+                    mTmpAngle += start - end;
                 }
                 requestLayout();
                 mLastX = x;
@@ -212,6 +215,12 @@ public class CircleMenuLayout extends ViewGroup {
                 break;
         }
         return super.dispatchTouchEvent(ev);
+    }
+
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        return true;
     }
 
     private int getDefaultWidth() {
@@ -245,8 +254,8 @@ public class CircleMenuLayout extends ViewGroup {
             final int j = i;
 
             View view = inflater.inflate(R.layout.item_cirle_menu, this, false);
-            ImageView iv = (ImageView) view.findViewById(R.id.iv_menu);
-            TextView contentTv = (TextView) view.findViewById(R.id.tv_menu);
+            ImageView iv = (ImageView) view.findViewById(R.id.id_circle_menu_item_image);
+            TextView contentTv = (TextView) view.findViewById(R.id.id_circle_menu_item_text);
 
             if (iv != null) {
                 iv.setVisibility(VISIBLE);
@@ -280,9 +289,9 @@ public class CircleMenuLayout extends ViewGroup {
         int tmpX = (int) (x - mRadius / 2);
         int tmpY = (int) (y - mRadius / 2);
         if (tmpX >= 0) {
-            return tmpY > 0 ? 4 : 1;
+            return tmpY >= 0 ? 4 : 1;
         } else {
-            return tmpY > 0 ? 3 : 2;
+            return tmpY >= 0 ? 3 : 2;
         }
     }
 

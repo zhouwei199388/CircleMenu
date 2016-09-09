@@ -2,11 +2,11 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
+              android:background="@drawable/bg"
               android:gravity="center_vertical"
-              android:background="@color/colorPrimary"
               android:orientation="horizontal">
 
-    <zw.com.circlemenu.CircleMenuLayout
+    <zw.com.circlemenu.view.CircleMenuLayout
         android:id="@+id/menu_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -30,7 +30,7 @@
                 android:layout_centerInParent="true"
                 android:background="@drawable/turnplate_mask_unlogin_normal"/>
         </RelativeLayout>
-    </zw.com.circlemenu.CircleMenuLayout>
+    </zw.com.circlemenu.view.CircleMenuLayout>
 
 
 </LinearLayout>
