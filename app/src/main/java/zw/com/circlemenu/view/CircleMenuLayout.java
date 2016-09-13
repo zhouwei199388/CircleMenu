@@ -3,13 +3,13 @@ package zw.com.circlemenu.view;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import zw.com.circlemenu.R;
 
@@ -34,7 +34,7 @@ public class CircleMenuLayout extends ViewGroup {
     /**
      * 该容器的内边距,无视padding属性，如需边距请用该变量
      */
-    private static final float RADIO_PADDING_LAYOUT = 1 / 12f;
+    private static final float RADIO_PADDING_LAYOUT = 1 / 14f;
 
     /**
      * 当每秒移动角度达到该值时，认为是快速移动
@@ -55,13 +55,13 @@ public class CircleMenuLayout extends ViewGroup {
      */
     private float mPadding;
     /**
-     * 布局时的开始角度
-     */
-    private double mStartAngle = 270;
-    /**
      * 菜单项的文本
      */
     private String[] mItemTexts;
+    /**
+     * 布局时的开始角度
+     */
+    private double mStartAngle = 18;
     /**
      * 菜单项的图标
      */
@@ -208,10 +208,10 @@ public class CircleMenuLayout extends ViewGroup {
         int cWidth = (int) (layoutRadius * RADIO_DEFAULT_CHILD_DIMENSION);
 
         // 根据menu item的个数，计算角度
-        float angleDelay = 360 / (getChildCount() - 1);
+        float angleDelay = 180 / 5;
 
         // 遍历去设置menuitem的位置
-        for (int i = 0; i < childCount; i++) {
+        for (int i = 0; i < 6; i++) {
             final View child = getChildAt(i);
 
             if (child.getId() == R.id.id_circle_menu_item_center)
@@ -221,7 +221,9 @@ public class CircleMenuLayout extends ViewGroup {
                 continue;
             }
 
-            mStartAngle %= 360;
+//            mStartAngle %= 180;
+            mStartAngle = mStartAngle % 180 + 180;
+            Log.e("TAG", mStartAngle + "");
 
             // 计算，中心点到menu item中心的距离
             float tmp = layoutRadius / 2f - cWidth / 2 - mPadding;
@@ -241,7 +243,11 @@ public class CircleMenuLayout extends ViewGroup {
 
             child.layout(left, top, left + cWidth, top + cWidth);
             // 叠加尺寸
+//            if (i > 3) {
+//                        mStartAngle = mStartAngle + buttomAngleDelay + 18;
+//            } else {
             mStartAngle += angleDelay;
+//            }
         }
 
         // 找到中心的view，如果存在设置onclick事件
@@ -264,9 +270,8 @@ public class CircleMenuLayout extends ViewGroup {
 
     }
 
-
     private void test() {
-        float angleDelay = 360 / (getChildCount() - 1);
+        float angleDelay = 180 / 5;
         if (mStartAngle % angleDelay == 0) {
             return;
         }
@@ -307,12 +312,11 @@ public class CircleMenuLayout extends ViewGroup {
                 mTmpAngle = 0;
 
                 // 如果当前已经在快速滚动
-                if (isFling) {
-                    // 移除快速滚动的回调
-                    removeCallbacks(mFlingRunnable);
-                    isFling = false;
-                    return true;
-                }
+//                if (isFling) {
+//                    // 移除快速滚动的回调
+//                    removeCallbacks(mFlingRunnable);
+//                    isFling = false;
+//                    return true;
 
                 break;
             case MotionEvent.ACTION_MOVE:
@@ -321,11 +325,12 @@ public class CircleMenuLayout extends ViewGroup {
                  * 获得开始的角度
                  */
                 float start = getAngle(mLastX, mLastY);
+                Log.e("TAG", "startAngle:   " + start);
                 /**
                  * 获得当前的角度
                  */
                 float end = getAngle(x, y);
-
+                Log.e("TAG", "endAngle:   " + end);
                 // Log.e("TAG", "start = " + start + " , end =" + end);
                 // 如果是一、四象限，则直接end-start，角度值都是正值
                 if (getQuadrant(x, y) == 1 || getQuadrant(x, y) == 4) {
@@ -345,7 +350,7 @@ public class CircleMenuLayout extends ViewGroup {
 
                 break;
             case MotionEvent.ACTION_UP:
-                test();
+//                test();
                 // 计算，每秒移动的角度
                 float anglePerSecond = mTmpAngle * 1000
                         / (System.currentTimeMillis() - mDownTime);
@@ -354,11 +359,11 @@ public class CircleMenuLayout extends ViewGroup {
                 // mTmpAngle);
 
                 // 如果达到该值认为是快速移动
-                if (Math.abs(anglePerSecond) > mFlingableValue && !isFling) {
-                    // post一个任务，去自动滚动
-                    post(mFlingRunnable = new AutoFlingRunnable(anglePerSecond));
-                    return true;
-                }
+//                if (Math.abs(anglePerSecond) > mFlingableValue && !isFling) {
+//                    // post一个任务，去自动滚动
+//                    post(mFlingRunnable = new AutoFlingRunnable(anglePerSecond));
+//                    return true;
+//                }
 
                 // 如果当前旋转角度超过NOCLICK_VALUE屏蔽点击
                 if (Math.abs(mTmpAngle) > NOCLICK_VALUE) {
@@ -369,13 +374,13 @@ public class CircleMenuLayout extends ViewGroup {
         return super.dispatchTouchEvent(event);
     }
 
-    /**
-     * 主要为了action_down时，返回true
-     */
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        return true;
-    }
+//    /**
+//     * 主要为了action_down时，返回true
+//     */
+//    @Override
+//    public boolean onTouchEvent(MotionEvent event) {
+//        return true;
+//    }
 
     /**
      * 根据触摸的位置，计算角度
@@ -530,7 +535,7 @@ public class CircleMenuLayout extends ViewGroup {
             // 如果小于20,则停止
             if ((int) Math.abs(angelPerSecond) < 20) {
                 isFling = false;
-                test();
+//                test();
                 return;
             }
             isFling = true;

@@ -16,9 +16,6 @@ public class MainActivity extends Activity {
 
     private int[] mItemImgs = new int[]{R.drawable.home_mbank_1_normal,
             R.drawable.home_mbank_2_normal, R.drawable.home_mbank_3_normal,
-            R.drawable.home_mbank_4_normal, R.drawable.home_mbank_5_normal, R.drawable
-            .home_mbank_1_normal,
-            R.drawable.home_mbank_2_normal, R.drawable.home_mbank_3_normal,
             R.drawable.home_mbank_4_normal, R.drawable.home_mbank_5_normal};
 
 
