@@ -9,6 +9,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 
 import zw.com.circlemenu.R;
@@ -267,23 +269,21 @@ public class CircleMenuLayout extends ViewGroup {
             int cr = cl + cView.getMeasuredWidth();
             cView.layout(cl, cl, cr, cr);
         }
-
     }
 
     private void test() {
         float angleDelay = 180 / 5;
-        if (mStartAngle % angleDelay == 0) {
+        if ((mStartAngle - 18) % angleDelay == 0) {
             return;
         }
-        double angle = mStartAngle % angleDelay;
+        float angle = (float) ((mStartAngle - 18) % angleDelay);
         if (angleDelay / 2 > angle) {
-            mStartAngle = mStartAngle - angle + angleDelay;
-        } else {
             mStartAngle -= angle;
+        } else {
+            mStartAngle = mStartAngle - angle + angleDelay;
         }
         requestLayout();
     }
-
 
     /**
      * 记录上一次的x，y坐标
@@ -350,11 +350,11 @@ public class CircleMenuLayout extends ViewGroup {
 
                 break;
             case MotionEvent.ACTION_UP:
-//                test();
-                // 计算，每秒移动的角度
-                float anglePerSecond = mTmpAngle * 1000
-                        / (System.currentTimeMillis() - mDownTime);
 
+                // 计算，每秒移动的角度
+//                float anglePerSecond = mTmpAngle * 1000
+//                        / (System.currentTimeMillis() - mDownTime);
+                test();
                 // Log.e("TAG", anglePrMillionSecond + " , mTmpAngel = " +
                 // mTmpAngle);
 
@@ -526,23 +526,30 @@ public class CircleMenuLayout extends ViewGroup {
     private class AutoFlingRunnable implements Runnable {
 
         private float angelPerSecond;
+        private float angleDelay;
 
-        public AutoFlingRunnable(float velocity) {
+        public AutoFlingRunnable(float velocity, float angleDelay) {
             this.angelPerSecond = velocity;
+            this.angleDelay = angleDelay;
         }
 
         public void run() {
             // 如果小于20,则停止
-            if ((int) Math.abs(angelPerSecond) < 20) {
+            if (angleDelay <= 0) {
                 isFling = false;
 //                test();
                 return;
             }
             isFling = true;
             // 不断改变mStartAngle，让其滚动，/30为了避免滚动太快
-            mStartAngle += (angelPerSecond / 30);
+            mStartAngle += angelPerSecond;
             // 逐渐减小这个值
-            angelPerSecond /= 1.0666F;
+            if (angleDelay - angelPerSecond < 0) {
+                angelPerSecond = angleDelay;
+                angleDelay = 0;
+            } else {
+                angleDelay -= angelPerSecond;
+            }
             postDelayed(this, 30);
             // 重新布局
             requestLayout();

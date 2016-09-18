@@ -29,6 +29,7 @@ public class MainActivity extends Activity {
 //        mCircleMenu.setMenuItemIconsAndTexts(mItemImgs, mItemTexts);
         mCircleMenu.setMenuItemLayoutId(R.layout.item_cirle_menu);
         mCircleMenu.setMenuItemIconsAndTexts(mItemImgs);
+
         mCircleMenu.setOnMenuItemClickListener(new zw.com.circlemenu.view.CircleMenuLayout
                 .OnMenuItemClickListener() {
 
