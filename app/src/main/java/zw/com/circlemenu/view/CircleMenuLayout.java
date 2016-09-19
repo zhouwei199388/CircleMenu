@@ -9,8 +9,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.view.animation.Animation;
-import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 
 import zw.com.circlemenu.R;
@@ -36,7 +34,7 @@ public class CircleMenuLayout extends ViewGroup {
     /**
      * 该容器的内边距,无视padding属性，如需边距请用该变量
      */
-    private static final float RADIO_PADDING_LAYOUT = 1 / 14f;
+    private static final float RADIO_PADDING_LAYOUT = 1 / 20f;
 
     /**
      * 当每秒移动角度达到该值时，认为是快速移动
@@ -63,7 +61,7 @@ public class CircleMenuLayout extends ViewGroup {
     /**
      * 布局时的开始角度
      */
-    private double mStartAngle = 18;
+    private double mStartAngle = 30;
     /**
      * 菜单项的图标
      */
@@ -119,13 +117,18 @@ public class CircleMenuLayout extends ViewGroup {
         if (widthMode != MeasureSpec.EXACTLY
                 || heightMode != MeasureSpec.EXACTLY) {
             // 主要设置为背景图的高度
-            resWidth = getSuggestedMinimumWidth();
-            // 如果未设置背景图片，则设置为屏幕宽高的默认值
-            resWidth = resWidth == 0 ? getDefaultWidth() : resWidth;
 
-            resHeight = getSuggestedMinimumHeight();
-            // 如果未设置背景图片，则设置为屏幕宽高的默认值
-            resHeight = resHeight == 0 ? getDefaultWidth() : resHeight;
+            resWidth = getDefaultWidth();
+
+            resHeight = getDefaultWidth() / 7 * 4;
+
+//            resWidth = getSuggestedMinimumWidth();
+//            // 如果未设置背景图片，则设置为屏幕宽高的默认值
+//            resWidth = resWidth == 0 ? getDefaultWidth() : resWidth;
+//
+//            resHeight = getSuggestedMinimumHeight();
+//            // 如果未设置背景图片，则设置为屏幕宽高的默认值
+//            resHeight = resHeight == 0 ? getDefaultWidth() : resHeight;
         } else {
             // 如果都设置为精确值，则直接取小值；
             resWidth = resHeight = Math.min(width, height);
@@ -133,9 +136,10 @@ public class CircleMenuLayout extends ViewGroup {
 
         setMeasuredDimension(resWidth, resHeight);
 
-        // 获得半径
+        // 获得直径
         mRadius = Math.max(getMeasuredWidth(), getMeasuredHeight());
 
+        Log.e("TAG", "redius:  " + mRadius);
         // menu item数量
         final int count = getChildCount();
         // menu item尺寸
@@ -154,14 +158,14 @@ public class CircleMenuLayout extends ViewGroup {
             // 计算menu item的尺寸；以及和设置好的模式，去对item进行测量
             int makeMeasureSpec = -1;
 
-            if (child.getId() == R.id.id_circle_menu_item_center) {
-                makeMeasureSpec = MeasureSpec.makeMeasureSpec(
-                        (int) (mRadius * RADIO_DEFAULT_CENTERITEM_DIMENSION),
-                        childMode);
-            } else {
-                makeMeasureSpec = MeasureSpec.makeMeasureSpec(childSize,
-                        childMode);
-            }
+//            if (child.getId() == R.id.id_circle_menu_item_center) {
+//                makeMeasureSpec = MeasureSpec.makeMeasureSpec(
+//                        (int) (mRadius * RADIO_DEFAULT_CENTERITEM_DIMENSION),
+//                        childMode);
+//            } else {
+            makeMeasureSpec = MeasureSpec.makeMeasureSpec(childSize,
+                    childMode);
+//            }
             child.measure(makeMeasureSpec, makeMeasureSpec);
         }
 
@@ -210,25 +214,25 @@ public class CircleMenuLayout extends ViewGroup {
         int cWidth = (int) (layoutRadius * RADIO_DEFAULT_CHILD_DIMENSION);
 
         // 根据menu item的个数，计算角度
-        float angleDelay = 180 / 5;
+        float angleDelay = 360 / 9;
 
         // 遍历去设置menuitem的位置
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < childCount; i++) {
             final View child = getChildAt(i);
 
-            if (child.getId() == R.id.id_circle_menu_item_center)
-                continue;
+//            if (child.getId() == R.id.id_circle_menu_item_center)
+//                continue;
 
             if (child.getVisibility() == GONE) {
                 continue;
             }
 
 //            mStartAngle %= 180;
-            mStartAngle = mStartAngle % 180 + 180;
-            Log.e("TAG", mStartAngle + "");
+            mStartAngle = mStartAngle % 360;
+            Log.e("TAG", "i:   " + i + "angle:   " + mStartAngle);
 
             // 计算，中心点到menu item中心的距离
-            float tmp = layoutRadius / 2f - cWidth / 2 - mPadding;
+            float tmp = layoutRadius / 2f - mPadding;
 
             // tmp cosa 即menu item中心点的横坐标
             left = layoutRadius
@@ -240,43 +244,40 @@ public class CircleMenuLayout extends ViewGroup {
             top = layoutRadius
                     / 2
                     + (int) Math.round(tmp
-                    * Math.sin(Math.toRadians(mStartAngle)) - 1 / 2f
+                    * Math.sin(Math.toRadians(mStartAngle)) - 1 / 5f
                     * cWidth);
 
             child.layout(left, top, left + cWidth, top + cWidth);
+
             // 叠加尺寸
-//            if (i > 3) {
-//                        mStartAngle = mStartAngle + buttomAngleDelay + 18;
-//            } else {
             mStartAngle += angleDelay;
-//            }
         }
 
         // 找到中心的view，如果存在设置onclick事件
-        View cView = findViewById(R.id.id_circle_menu_item_center);
-        if (cView != null) {
-            cView.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-
-                    if (mOnMenuItemClickListener != null) {
-                        mOnMenuItemClickListener.itemCenterClick(v);
-                    }
-                }
-            });
-            // 设置center item位置
-            int cl = layoutRadius / 2 - cView.getMeasuredWidth() / 2;
-            int cr = cl + cView.getMeasuredWidth();
-            cView.layout(cl, cl, cr, cr);
-        }
+//        View cView = findViewById(R.id.id_circle_menu_item_center);
+//        if (cView != null) {
+//            cView.setOnClickListener(new OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//
+//                    if (mOnMenuItemClickListener != null) {
+//                        mOnMenuItemClickListener.itemCenterClick(v);
+//                    }
+//                }
+//            });
+//            // 设置center item位置
+//            int cl = layoutRadius / 2 - cView.getMeasuredWidth() / 2;
+//            int cr = cl + cView.getMeasuredWidth();
+//            cView.layout(cl, cl, cr, cr);
+//        }
     }
 
     private void test() {
-        float angleDelay = 180 / 5;
-        if ((mStartAngle - 18) % angleDelay == 0) {
+        float angleDelay = 360 / 9;
+        if ((mStartAngle - 30) % angleDelay == 0) {
             return;
         }
-        float angle = (float) ((mStartAngle - 18) % angleDelay);
+        float angle = (float) ((mStartAngle - 30) % angleDelay);
         if (angleDelay / 2 > angle) {
             mStartAngle -= angle;
         } else {
@@ -301,7 +302,6 @@ public class CircleMenuLayout extends ViewGroup {
         float x = event.getX();
         float y = event.getY();
 
-        // Log.e("TAG", "x = " + x + " , y = " + y);
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
@@ -325,12 +325,10 @@ public class CircleMenuLayout extends ViewGroup {
                  * 获得开始的角度
                  */
                 float start = getAngle(mLastX, mLastY);
-                Log.e("TAG", "startAngle:   " + start);
                 /**
                  * 获得当前的角度
                  */
                 float end = getAngle(x, y);
-                Log.e("TAG", "endAngle:   " + end);
                 // Log.e("TAG", "start = " + start + " , end =" + end);
                 // 如果是一、四象限，则直接end-start，角度值都是正值
                 if (getQuadrant(x, y) == 1 || getQuadrant(x, y) == 4) {
@@ -355,7 +353,6 @@ public class CircleMenuLayout extends ViewGroup {
 //                float anglePerSecond = mTmpAngle * 1000
 //                        / (System.currentTimeMillis() - mDownTime);
                 test();
-                // Log.e("TAG", anglePrMillionSecond + " , mTmpAngel = " +
                 // mTmpAngle);
 
                 // 如果达到该值认为是快速移动
