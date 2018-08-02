@@ -14,13 +14,6 @@ import android.widget.ImageView;
 import zw.com.circlemenu.R;
 
 
-/**
- * <pre>
- *
- * @author zhy
- *         http://blog.csdn.net/lmj623565791/article/details/43131133
- *         </pre>
- */
 public class CircleMenuLayout extends ViewGroup {
     private int mRadius;
     /**
@@ -93,6 +86,7 @@ public class CircleMenuLayout extends ViewGroup {
         // 无视padding
         setPadding(0, 0, 0, 0);
     }
+
 
     /**
      * 设置布局的宽高，并策略menu item宽高

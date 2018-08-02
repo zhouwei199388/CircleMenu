@@ -66,7 +66,6 @@ public class CircleMenuLayout extends ViewGroup {
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-
         int layoutRadius = mRadius;
         final int childCount = getChildCount();
         int left, top;
